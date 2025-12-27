@@ -22,17 +22,17 @@ public class PostService {
 
     private final PostRepository PostRepository;
     private final UserRepository userRepository;
-    private final PostMapper PostMapper;
+    private final PostMapper postMapper;
 
     public List<PostDto> getAll() {
-        return PostMapper.toDtoList(PostRepository.findAll());
+        return postMapper.toDtoList(PostRepository.findAll());
     }
 
     public PostDto getById(Long id) {
         Post postEntity = PostRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Пост с ID " + id + " не найден"));
 
-        return PostMapper.toDto(postEntity);
+        return postMapper.toDto(postEntity);
     }
 
     @Transactional
@@ -43,11 +43,11 @@ public class PostService {
         User user = userRepository.findByName(currentUsername)
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден: " + currentUsername));
 
-        Post postEntity = PostMapper.toEntity(postDto);
+        Post postEntity = postMapper.toEntity(postDto);
         postEntity.setUser(user);
 
         Post savedPost = PostRepository.save(postEntity);
-        return PostMapper.toDto(savedPost);
+        return postMapper.toDto(savedPost);
     }
 
     @Transactional
@@ -62,7 +62,7 @@ public class PostService {
         postEntity.setText(newPostDto.getText());
 
         Post updatedPost = PostRepository.save(postEntity);
-        return PostMapper.toDto(updatedPost);
+        return postMapper.toDto(updatedPost);
     }
 
     @Transactional

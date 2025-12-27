@@ -26,35 +26,35 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
 
-    private final UserRepository UserRepository;
-    private final UserMapper UserMapper;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
     private final PermissionRepository permissionRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return UserRepository.findByName(username)
+        return userRepository.findByName(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
     }
 
     public List<UserDto> getAll(){
-        return UserMapper.toDtoList(UserRepository.findAll());
+        return userMapper.toDtoList(userRepository.findAll());
     }
 
     public UserDto getById(Long id) {
-        User userEntity = UserRepository.findById(id)
+        User userEntity = userRepository.findById(id)
                 .orElseThrow(()-> new EntityNotFoundException("Пользователь с ID " + id + " не найден"));
-        return UserMapper.toDto(userEntity);
+        return userMapper.toDto(userEntity);
     }
 
     @Transactional
     public UserDto addUser(UserDto userDto) {
         // существует ли юзер
-        if (UserRepository.existsByName(userDto.getName())) {
+        if (userRepository.existsByName(userDto.getName())) {
             throw new RuntimeException("Пользователь с таким именем уже существует");
         }
 
-        User userEntity = UserMapper.toEntity(userDto);
+        User userEntity = userMapper.toEntity(userDto);
         userEntity.setPassword(passwordEncoder.encode(userDto.getPassword()));
 
         // Логика ролей
@@ -64,25 +64,22 @@ public class UserService implements UserDetailsService {
             roleUser = permissionRepository.save(roleUser);
         }
 
-        // ВАЖНО: Collections.singletonList создает неизменяемый список. 
-        // Если JPA захочет что-то добавить в этот список позже, будет ошибка.
-        // Лучше обернуть в ArrayList.
         userEntity.setPermissions(new ArrayList<>(Collections.singletonList(roleUser)));
 
-        User savedEntity = UserRepository.save(userEntity);
-        return UserMapper.toDto(savedEntity);
+        User savedEntity = userRepository.save(userEntity);
+        return userMapper.toDto(savedEntity);
     }
 
     @Transactional
     public UserDto updateUser(Long id, UserDto newUserDto) {
-        User existingUser = UserRepository.findById(id)
+        User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь с ID " + id + " не найден"));
 
         // меняет ли юзер сам себя
         checkUserAccess(existingUser);
 
         if (!existingUser.getName().equals(newUserDto.getName())
-                && UserRepository.existsByName(newUserDto.getName())) {
+                && userRepository.existsByName(newUserDto.getName())) {
             throw new RuntimeException("Имя пользователя '" + newUserDto.getName() + "' уже занято");
         }
 
@@ -92,19 +89,19 @@ public class UserService implements UserDetailsService {
             existingUser.setPassword(passwordEncoder.encode(newUserDto.getPassword()));
         }
 
-        User updatedUser = UserRepository.save(existingUser);
-        return UserMapper.toDto(updatedUser);
+        User updatedUser = userRepository.save(existingUser);
+        return userMapper.toDto(updatedUser);
     }
 
     @Transactional
     public void deleteUser(Long id) {
-        User user = UserRepository.findById(id)
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь с ID " + id + " не найден"));
 
         // удаляет ли юзер сам себя
         checkUserAccess(user);
 
-        UserRepository.delete(user);
+        userRepository.delete(user);
     }
 
     // метод проверки прав

@@ -21,7 +21,7 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
-    private final PostRepository PostRepository;
+    private final PostRepository postRepository;
 
     public List<CategoryDto> getAll() {
         return categoryMapper.toDtoList(categoryRepository.findAll());
@@ -66,7 +66,7 @@ public class CategoryService {
 
     @Transactional
     public void addCategoryToPost(Long postId, Long categoryId) {
-        Post post = PostRepository.findById(postId)
+        Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Пост с ID " + postId + " не найден"));
 
         checkPostOwnership(post);
@@ -77,13 +77,13 @@ public class CategoryService {
         // чтобы не добавить дубликат
         if (!post.getCategories().contains(category)) {
             post.getCategories().add(category);
-            PostRepository.save(post);
+            postRepository.save(post);
         }
     }
 
     @Transactional
     public void removeCategoryFromPost(Long postId, Long categoryId) {
-        Post post = PostRepository.findById(postId)
+        Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Пост с ID " + postId + " не найден"));
 
         // свой ли пост редактирует пользователь
@@ -93,7 +93,7 @@ public class CategoryService {
                 .orElseThrow(() -> new EntityNotFoundException("Категория с ID " + categoryId + " не найдена"));
 
         post.getCategories().remove(category);
-        PostRepository.save(post);
+        postRepository.save(post);
     }
 
     // является ли текущий юзер автором поста
