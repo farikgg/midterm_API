@@ -8,6 +8,7 @@ import com.midterm_api.repository.CategoryRepository;
 import com.midterm_api.repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -98,9 +99,13 @@ public class CategoryService {
 
     // является ли текущий юзер автором поста
     private void checkPostOwnership(Post post) {
-        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
 
-        if (!post.getUser().getName().equals(currentUsername)) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!post.getUser().getName().equals(currentUsername) && !isAdmin) {
             throw new AccessDeniedException("Вы не являетесь автором этого поста");
         }
     }

@@ -77,8 +77,13 @@ public class PostService {
     }
 
     private void checkPostOwnership(Post post) {
-        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (!post.getUser().getName().equals(currentUsername)) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!post.getUser().getName().equals(currentUsername) && !isAdmin) {
             throw new AccessDeniedException("Вы не являетесь автором этого поста");
         }
     }

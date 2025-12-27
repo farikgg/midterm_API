@@ -9,6 +9,7 @@ import com.midterm_api.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -106,9 +107,13 @@ public class UserService implements UserDetailsService {
 
     // метод проверки прав
     private void checkUserAccess(User targetUser) {
-        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
 
-        if (!targetUser.getName().equals(currentUsername)) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!targetUser.getName().equals(currentUsername) && !isAdmin) {
             throw new AccessDeniedException("Вы можете управлять только своим аккаунтом");
         }
     }
