@@ -1,0 +1,27 @@
+services:
+  midterm-api-spring:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: midterm-api
+    container_name: spring-midterm-api
+    depends_on:
+      - midterm-api-spring-database
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://midterm-api-spring-database:5432/midterm_api
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+    ports:
+      - "8888:8080"
+
+  midterm-api-spring-database:
+    image: postgres
+    container_name: midterm-api-spring-database
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=midterm_api
+    ports:
+      - "2345:5432"
